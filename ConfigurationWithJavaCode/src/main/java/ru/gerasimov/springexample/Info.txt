@@ -1,0 +1,102 @@
+Конфигурация Spring приложений
+
+1. Вся конфигурация на XML;
+2. XML + аннотации;
+3. Java код + Аннотации (XML конфигурации больше нет);
+========================================================================================================================
+Для того чтобы пометить Java класс, который мы хоти использовать для конфигурации Spring приложения есть специальная
+аннотация @Configuration:
+Помечает Java класс, который мы хотим использовать для конфигурации Spring приложения:
+@Configuration
+public class SpringConfig{}
+Пустой конфигаруционный Java класс равен по функционалу пустому конфигурационному XML файлу
+========================================================================================================================
+Для каждого XML тега есть соответствующая аннотация
+
+        <context:component-scan base-package="ru.gerasimov.springexample"/>
+                         |
+                         |
+                         |
+                    меняем на это
+                         |
+                         |
+                         |
+               @Configuration
+               @ComponentScan("ru.gerasimov.springexample")
+               public class SpringConfig{}
+
+               Такой конфигурационный Java файл он уже даст понять Spring'у в каком пакете ему стоит искать компоненты
+               чтобы из этих компонентов создать бины
+
+        <bean id="popMusicBean"
+              class="ru.gerasimov.springexample.PopMusic">
+        </bean>
+                      |
+                      |
+                      |
+                 меняем на это
+                      |
+                      |
+                      |
+                @Configuration
+                public class SpringConfig{
+                    @Bean
+                    public ClassicMusic musicBean(){
+                         return new ClassiclMusic();
+                       }
+                       }
+
+               и так далее для всех тегов XML конфигурации...
+========================================================================================================================
+Использование конфигурационного файла
+
+public class TestSpring {
+    public static void main(String[] args) {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+        MusicPlayer firstMusicPlayer = context.getBean("musicPlayer", MusicPlayer.class);
+                              |
+                              |
+                          меняем на это
+                              |
+                              |
+public class TestSpring {
+    public static void main(String[] args) {
+    AnnotationConfigApplicationContext context =
+    new AnnotationConfigApplicationContext (SpringConfig.class);
+
+      MusicPlayer firstMusicPlayer = context.getBean("musicPlayer", MusicPlayer.class);
+========================================================================================================================
+Ручное внедрение зависимостей (без @Autowired) с помощью Java конфигурации
+
+@Configuration
+public class SpringConfig{
+   @Bean
+    public ClassicalMusic musicBean(){ bean id - musicBean
+    return new ClassicalMusic();
+    }
+   @Bean
+    public MusicPlayer musicPlayer(){ bean id - musicPlayer
+    return new MusicPlayer(musicBean());//в качестве зависимости внедрили musicBean
+    }
+    }
+========================================================================================================================
+Подробней об аннотации @Bean
+
+1.Как и в случае с XML конфигурацией, по умолчанию у бинов scope=singleton.
+2.Это значит, что тело @Bean методов по-умолчанию вызывается только один раз, а все последующие вызовы Spring
+прерывает и возвращает уже имеющийся бин из контекста.
+========================================================================================================================
+Внедрение значений из внешнего файла
+
+@Configuration
+@PropertySource("classpath:musicPlayer.properties")
+public class springConfig{
+@Value("${musicPlayer.name}")
+private String name;
+}
+========================================================================================================================
+
+
+
+
